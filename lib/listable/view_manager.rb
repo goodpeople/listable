@@ -32,6 +32,7 @@ module Listable
             queries = []
             view_name = prefixed_view_name(view_name.to_s) # Appending a prefix to views
             query_info.each do |model_name, scope|
+              puts "scope: #{scope}"
               model_class = Kernel.const_get(model_name)
               table_name = model_class.table_name
               query = model_class.select_as("#{table_name}.id" => :listable_id) # Always begin selection with the original model ID
@@ -41,14 +42,20 @@ module Listable
 
               queries << query
             end
-            ActiveRecord::Base.connection.create_view view_name, queries
+
+            create_sql = "CREATE VIEW #{view_name.to_s.pluralize} AS "
+            queries.map!(&:to_sql) # Compile the arel queries to sql
+            create_sql << queries * ' UNION ' # Combines the queries with union
+            puts create_sql
+
+            ActiveRecord::Base.connection.execute create_sql
           end
         end
       end
 
       def drop_views
         ActiveRecord::Base.connection.views.each do |name|
-          ActiveRecord::Base.connection.drop_view(name) if listable_view? name
+          ActiveRecord::Base.connection.execute "DROP VIEW #{name}"
         end
       end
     end
