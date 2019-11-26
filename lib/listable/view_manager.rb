@@ -38,7 +38,7 @@ module Listable
               query = model_class.select_as("#{table_name}.id" => :listable_id) # Always begin selection with the original model ID
               query = query.send(scope) # Appends selection from scope
               query = query.select(["#{table_name}.created_at", "#{table_name}.updated_at"]) # Include Rails' timestamps in view
-              query = query.select("CAST('#{model_name}' AS char(#{model_name.length})) AS listable_type") # Finish with the original model name, needed for the polymorphic relation
+              query = query.select("CAST('#{model_name}' AS char(#{model_name.length})) COLLATE utf8_unicode_ci AS listable_type ") # Finish with the original model name, needed for the polymorphic relation
 
               queries << query
             end
